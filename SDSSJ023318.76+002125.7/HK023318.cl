@@ -200,8 +200,11 @@ gemcombine ("@farcdark.lis", "arcdark.fits", combine="average", fl_vardq=yes, \
 delete ("fobjdark.lis", verify=no)
 imdelete ("objdark.fits", verify=no)
 sections "f@objdark.lis" > "fobjdark.lis"
-gemcombine ("@fobjdark.lis", "objdark.fits", combine="average", fl_vardq=yes, \
-            logfile=f2.logfile)
+# there's only one dark
+sections @fobjdark.lis//.fits > "tmp.lis"
+copy ("@tmp.lis","objdark.fits")
+#gemcombine ("@fobjdark.lis", "objdark.fits", combine="average", fl_vardq=yes, \
+#            logfile=f2.logfile)
  
 delete ("fteldark.lis", verify=no)
 imdelete ("teldark.fits", verify=no)
@@ -325,19 +328,10 @@ imdelete ("df@tel.lis", verify=no)
 nsreduce ("f@tel.lis", outprefix="d", fl_cut=no, fl_process_cut=no, \
           fl_dark=yes, darkimage="teldark.fits", fl_sky=no, fl_flat=no)
    
-#imdelete ("rdf@tel.lis", verify=no)
-#nsreduce ("df@tel.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
-#          flatimage="flat.fits")
-# Time diff between first obs and second is 55sec, while it is 24 for the
-# the others.  Why did it take so long to take the first image?
-# Automatic sky selection fails.  Now how to I do it manually?
 imdelete ("rdf@tel.lis", verify=no)
-!echo dfS20131015S0019 > telsky.lis
-!echo dfS20131015S0018 >> telsky.lis
-!echo dfS20131015S0021 >> telsky.lis
-!echo dfS20131015S0020 >> telsky.lis
 nsreduce ("df@tel.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
-          flatimage="flat.fits", skyimages="@telsky.lis")
+          flatimage="flat.fits")
+
                                        
 ###############################################################################
 # STEP 10: Combine the telluric data                                          #
@@ -453,6 +447,8 @@ nstelluric ("xtfobj_comb.fits", "xtftel_comb", fitorder=12, threshold=0.01, \
 splot ("axtfobj_comb.fits[SCI,1]", ymin=-200, ymax=1000)
 specplot ("xtfobj_comb.fits[sci,1],axtfobj_comb.fits[sci,1],\
           xtftel_comb.fits[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=1000)
+
+iraf.copy ("axtfobj_comb.fits", "../../sciproducts/HK.fits")
                                        
 ###############################################################################
 # STEP 18: Tidy up                                                            #

@@ -33,7 +33,7 @@
 # Data filename prefix: S20131027S
 # File numbers:
 #      Telluric (HIP 13917)       : 50-53   (JH, JH, 2pix-slit, 30s)
-#      Darks for telluric         : 156-181 (30s, **S20131028**)
+#      Darks for telluric         : 156-161 (30s, **S20131028**)
 #      Flat                       : 42      (JH, JH, 2pix-slit, 8s)
 #      Darks for flat             : 38-43   (8s, **S20131024**)
 #      Arc                        : 41      (JH, JH, 2pix-slit, 30s)
@@ -124,7 +124,7 @@ gemlist "S20131026S" "804-810" > "arcdark.lis"
 gemlist "S20131027S" "37-40" > "obj.lis"
 gemlist "S20131028S" "26" > "objdark.lis"
 gemlist "S20131027S" "50-53"   > "tel.lis"
-gemlist "S20131028S" "156-181"     > "teldark.lis"
+gemlist "S20131028S" "156-161"     > "teldark.lis"
             
 concat ("flat.lis,flatdark.lis,arc.lis,arcdark.lis,obj.lis,objdark.lis,\
 	tel.lis,teldark.lis", "all.lis")
@@ -198,8 +198,11 @@ gemcombine ("@farcdark.lis", "arcdark.fits", combine="average", fl_vardq=yes, \
 delete ("fobjdark.lis", verify=no)
 imdelete ("objdark.fits", verify=no)
 sections "f@objdark.lis" > "fobjdark.lis"
-gemcombine ("@fobjdark.lis", "objdark.fits", combine="average", fl_vardq=yes, \
-            logfile=f2.logfile)
+# there's only one dark
+sections @fobjdark.lis//.fits > "tmp.lis"
+copy ("@tmp.lis","objdark.fits")
+#gemcombine ("@fobjdark.lis", "objdark.fits", combine="average", fl_vardq=yes, \
+#            logfile=f2.logfile)
  
 delete ("fteldark.lis", verify=no)
 imdelete ("teldark.fits", verify=no)
@@ -432,7 +435,7 @@ nsextract ("tfobj_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
    
 splot ("xtfobj_comb.fits[SCI,1]")
 
-# Now, this one has good signal.  HeI and PaGamma very strong.
+# Very noisy
                                        
 ###############################################################################
 # STEP 17: Apply the telluric correction to the science spectrum              #
@@ -448,7 +451,9 @@ nstelluric ("xtfobj_comb.fits", "xtftel_comb", fitorder=12, threshold=0.01, \
 splot ("axtfobj_comb.fits[SCI,1]", ymin=-200, ymax=1000)
 specplot ("xtfobj_comb.fits[sci,1],axtfobj_comb.fits[sci,1],\
           xtftel_comb.fits[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=1000)
-                                       
+
+iraf.copy ("axtfobj_comb.fits", "../../sciproducts/JH.fits")
+                            
 ###############################################################################
 # STEP 18: Tidy up                                                            #
 ###############################################################################
