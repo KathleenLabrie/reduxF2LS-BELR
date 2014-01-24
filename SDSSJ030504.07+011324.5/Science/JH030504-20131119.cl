@@ -23,7 +23,7 @@
 #      Science                    : 050-053 (JH, JH, 2pix-slit, 90s)
 #      Darks for science          : 121-127 (90s)
 #      Flat                       : 055     (JH, JH, 2pix-slit, 8s)
-#      Darks for flat             : 104-120 (8s)
+#      Darks for flat             : 114-120 (8s)
 #      Arc                        : 054     (JH, JH, 2pix-slit, 30s)
 #      Darks for arc              : 100-106 (30s)
 #
