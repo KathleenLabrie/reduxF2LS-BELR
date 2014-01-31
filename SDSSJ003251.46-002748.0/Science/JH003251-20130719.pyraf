@@ -49,7 +49,7 @@
 # Observation UT date : 2013 Jul 19, ** 2013 Oct 02
 # Data filename prefix: S20130719S, **S20131002S
 # File numbers:
-#      Telluric (HIP 6061)        : 520-523 (JH, JH, 2pix-slit, 2s)
+#      Telluric (HIP 6061)        : 516-519 (JH, JH, 2pix-slit, 2s)
 #      Darks for telluric         : 524-527 (2s)
 #      Flat                       : 507     (JH, JH, 2pix-slit, 8s)
 #      Darks for flat             : 540-543 (8s)
@@ -124,7 +124,7 @@ gemlist "S20130719S" "506"     > "arc.lis"
 gemlist "S20131002S" "203-209" > "arcdark.lis"
 gemlist "S20130719S" "502-505" > "obj.lis"
 gemlist "S20130930S" "156-162" > "objdark.lis"
-gemlist "S20130719S" "520-523"   > "tel.lis"
+gemlist "S20130719S" "516-519"   > "tel.lis"
 gemlist "S20130719S" "524-527"     > "teldark.lis"
 
 # Use the first if the arcdarks and objdarks are all different
@@ -228,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=115)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -262,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:

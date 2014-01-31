@@ -117,7 +117,7 @@ tel.lis,teldark.lis,all.lis", verify=no)
 # their own dataset.
 print ("HK030504: Creating the reduction lists")
 gemlist "S20131119S" "049"      > "flat.lis"
-gemlist "S20131119S" "1107-113" > "flatdark.lis"
+gemlist "S20131119S" "107-113" > "flatdark.lis"
 gemlist "S20131119S" "048"     > "arc.lis"
 gemlist "S20131119S" "121-127" > "arcdark.lis"
 gemlist "S20131119S" "044-047" > "obj.lis"
@@ -159,6 +159,10 @@ for line in file:
 
 file.close()
 
+# flat looks bizarre, flat darks, teldarks look really odd - very black??
+# Science and arcs are also dark and don’t seem to show many lines…?
+# In the second running of data (to check) the darkness suddenly clears
+# around step 12ish - maybe it was a ds9 glitch?
 
 ###############################################################################
 # STEP 5: f2prepare all the data                                              #
@@ -200,6 +204,8 @@ sections "f@teldark.lis" > "fteldark.lis"
 gemcombine ("@fteldark.lis", "teldark.fits", combine="average", fl_vardq=yes, \
     logfile=f2.logfile)
 
+# They all look really black? I’m assuming this is ok for the minute…
+
 ###############################################################################
 # STEP 7: Create the normalised flat field and BPM                            #
 ###############################################################################
@@ -226,7 +232,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=111)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -260,6 +266,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -320,6 +327,7 @@ nsfitcoords ("tel_comb.fits", lamptransf="warc.fits")
 imdelete ("tftel_comb.fits", verify=no)
 nstransform ("ftel_comb.fits")
 
+
 ###############################################################################
 # STEP 12: Extract the telluric spectrum                                      #
 ###############################################################################
@@ -356,6 +364,8 @@ fl_cross=no, rejtype="none")
 
 
 display ("obj_comb.fits[SCI,1]", 1)
+
+# this looks more than unusual… on second time around looks normal wtf?
 
 ###############################################################################
 # STEP 15: Wavelength calibrate the science data                              #

@@ -161,7 +161,7 @@ for line in file:
 	iraf.sleep(5)
 
 file.close()
-
+# obj data seems very bright and overlapping
 
 ###############################################################################
 # STEP 5: f2prepare all the data                                              #
@@ -229,7 +229,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=113)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -263,6 +263,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -390,8 +391,10 @@ nstransform ("fobj_comb.fits")
 imdelete ("xtfobj_comb.fits", verify=no)
 nsextract ("tfobj_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)
-
+#970
 splot ("xtfobj_comb.fits[SCI,1]")
+# not sure where the rest of the data points have gone after line 750 in the
+# fit (2nd) section.
 
 ###############################################################################
 # STEP 17: Apply the telluric correction to the science spectrum              #

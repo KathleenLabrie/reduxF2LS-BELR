@@ -161,6 +161,8 @@ for line in file:
 
 file.close()
 
+# bit of an odd feature on arcdark 805
+
 
 ###############################################################################
 # STEP 5: f2prepare all the data                                              #
@@ -262,6 +264,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -385,7 +388,7 @@ nstransform ("fobj_comb.fits")
 
 # For faint science spectra, the telluric can be used as a reference when
 # extracting the science spectra; set trace=tftel_comb.fits.
-
+#970
 imdelete ("xtfobj_comb.fits", verify=no)
 nsextract ("tfobj_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)

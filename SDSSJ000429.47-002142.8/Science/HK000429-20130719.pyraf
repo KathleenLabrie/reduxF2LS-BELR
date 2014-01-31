@@ -228,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=120)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -262,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -332,6 +333,26 @@ nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
 
 splot ("xtftel_comb.fits[SCI,1]")
 
+# Before running the steps below, examine xtftel_comb for stellar features
+# (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
+# Probable stellar features at ~(Å): 24488#0, 21668#1, 16808#2, 16410#3, 16107#4
+# 15882#5, 15700#6 - there seem to be quite a few - perhaps because this
+# telluric is A5 classification, rather than the usual A0?
+
+# most apparent stellar absorption lines are a little off from expected
+# hydrogen lines (in reference text).
+
+# Remove stellar absorption features in telluric through rmfeature in a second
+# terminal
+# [IN A SECOND TERMINAL:]
+
+rmfeature xtftel_comb.fits tel_temp.fits
+
+# Continue replacing tel_tempN until all features removed, naming the final
+# file tel_clean.fits (where N is number of iterative correction).
+
+rmfeature tel_temp*N.fits tel_clean.fits
+
 ###############################################################################
 # STEP 13: Reduce the science data                                            #
 ###############################################################################
@@ -378,6 +399,8 @@ nsfitcoords ("obj_comb.fits", lamptransf="warc.fits")
 
 imdelete ("tfobj_comb.fits", verify=no)
 nstransform ("fobj_comb.fits")
+
+# CK: X = 499, Y = 938
 
 ###############################################################################
 # STEP 16: Extract the science spectrum                                       #

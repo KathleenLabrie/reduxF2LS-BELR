@@ -228,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=130)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -262,10 +262,11 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
-	iraf.copy ("@rdfarc.lis", "arc.fits")
+        iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
-	iraf.gemcombine ("@rdfarc.lis", "arc.fits", fl_vardq=yes)
+        iraf.gemcombine ("@rdfarc.lis", "arc.fits", fl_vardq=yes)
 
 file.close()
 
@@ -331,6 +332,27 @@ nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
     fl_trace=yes)
 
 splot ("xtftel_comb.fits[SCI,1]")
+
+# Before running the steps below, examine xtftel_comb for stellar features
+# (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
+# Probable stellar features at ~(Å): 17360#0, 16800#1, 16415#2, 16110#3, 15895#4
+# 12819#5, 10918#6, 10015
+# most apparent stellar absorption lines are a little off from expected
+# hydrogen lines (in reference text).
+
+# Remove stellar absorption features in telluric through rmfeature in a second
+# terminal.
+# [IN A SECOND TERMINAL:]
+
+rmfeature xtftel_comb.fits tel_temp.fits
+
+# Continue replacing tel_tempN until all features removed, naming the final
+# file tel_clean.fits (where N is number of iterative correction).
+
+rmfeature tel_temp*N.fits tel_temp**N.fits
+# An error is a reminder to replace the Ns in file names above!
+
+rmfeature tel_temp6.fits tel_clean.fits
 
 ###############################################################################
 # STEP 13: Reduce the science data                                            #
@@ -398,14 +420,18 @@ splot ("xtfobj_comb.fits[SCI,1]")
 
 # Note that this telluric has not been corrected to remove intrinsic stellar
 # features; this will leave false emission features in the final spectrum.
+# Second note: yes it has - see Step 12
 
 imdelete ("axtfobj_comb.fits", verify=no)
-nstelluric ("xtfobj_comb.fits", "xtftel_comb", fitorder=12, threshold=0.01, \
+nstelluric ("xtfobj_comb.fits", "tel_clean", fitorder=12, threshold=0.01, \
     fl_inter=yes)
+
+# order 29 for telluric, order 19 for science
+# scale 0.6, shift 0
 
 splot ("axtfobj_comb.fits[SCI,1]", ymin=-200, ymax=1000)
 specplot ("xtfobj_comb.fits[sci,1],axtfobj_comb.fits[sci,1],\
-    xtftel_comb.fits[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=4000)
+    tel_clean[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=4000)
 
 ###############################################################################
 # STEP 18: Tidy up                                                            #

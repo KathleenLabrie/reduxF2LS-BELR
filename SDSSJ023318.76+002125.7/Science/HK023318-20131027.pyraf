@@ -228,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=111)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -262,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -358,6 +359,7 @@ fl_cross=no, rejtype="none")
 
 
 display ("obj_comb.fits[SCI,1]", 1)
+# RIDICULOUSLY FAINT - practically indistinguishable in many places
 
 ###############################################################################
 # STEP 15: Wavelength calibrate the science data                              #
@@ -389,6 +391,8 @@ nstransform ("fobj_comb.fits")
 imdelete ("xtfobj_comb.fits", verify=no)
 nsextract ("tfobj_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)
+
+# It is difficult to see how this could be used for science as it is ubernoisy
 
 splot ("xtfobj_comb.fits[SCI,1]")
 

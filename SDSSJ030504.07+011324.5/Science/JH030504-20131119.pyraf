@@ -52,7 +52,7 @@
 #      Telluric (HIP 13917)       : 063-066 (JH, JH, 2pix-slit, 30s)
 #      Darks for telluric         : *133-138 (30s)
 #      Flat                       : 055     (JH, JH, 2pix-slit, 8s)
-#      Darks for flat             : 104-120 (8s)
+#      Darks for flat             : 114-120 (8s)
 #      Arc                        : 054     (JH, JH, 2pix-slit, 30s)
 #      Darks for arc              : 100-106 (30s)
 
@@ -119,7 +119,7 @@ tel.lis,teldark.lis,all.lis", verify=no)
 # their own dataset.
 print ("JH030504: Creating the reduction lists")
 gemlist "S20131119S" "055"      > "flat.lis"
-gemlist "S20131119S" "104-120" > "flatdark.lis"
+gemlist "S20131119S" "114-120" > "flatdark.lis"
 gemlist "S20131119S" "054"     > "arc.lis"
 gemlist "S20131119S" "100-106" > "arcdark.lis"
 gemlist "S20131119S" "050-053" > "obj.lis"
@@ -228,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=107)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -262,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -344,7 +345,7 @@ nsreduce ("f@obj.lis", outprefix="d", fl_cut=no, fl_process_cut=no, \
 
 imdelete ("rdf@obj.lis", verify=no)
 nsreduce ("df@obj.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
-    flatimage="flat.fits")
+
 
 ###############################################################################
 # STEP 14: Combine the science data                                           #
