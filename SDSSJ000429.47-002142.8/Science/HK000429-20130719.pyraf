@@ -335,12 +335,20 @@ splot ("xtftel_comb.fits[SCI,1]")
 
 # Before running the steps below, examine xtftel_comb for stellar features
 # (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
-# Probable stellar features at ~(Å): 24488#0, 21668#1, 16808#2, 16410#3, 16107#4
-# 15882#5, 15700#6 - there seem to be quite a few - perhaps because this
+# Probable stellar features at ~(Å): 21668#0, 16808#1, 16410#2, 16107#3
+# 15882#clean, 15700#4 - there seem to be quite a few - perhaps because this
 # telluric is A5 classification, rather than the usual A0?
+# [Was easier to fit the final line first and the the penultimate line
+# in this case. These bands were tricky & tel_clean could be improved.
 
-# most apparent stellar absorption lines are a little off from expected
-# hydrogen lines (in reference text).
+# Pa Beta em: 20712.80624 is in telluric absorption feature
+# Pa Gamma em: 17674.9086 seems OK
+# HeI(10830) em: 17500.22949 seems OK
+# Pa Delta em: 16238.85561 poss. compromised by Brackett, m=13
+# Pa Epsilon em:15425.37772 seems OK
+
+# Centres of most apparent stellar absorption lines are a little off from
+# expected hydrogen lines (in reference text).
 
 # Remove stellar absorption features in telluric through rmfeature in a second
 # terminal
@@ -348,10 +356,15 @@ splot ("xtftel_comb.fits[SCI,1]")
 
 rmfeature xtftel_comb.fits tel_temp.fits
 
+rmfeature tel_temp*N.fits tel_temp**N.fits
+
 # Continue replacing tel_tempN until all features removed, naming the final
 # file tel_clean.fits (where N is number of iterative correction).
 
 rmfeature tel_temp*N.fits tel_clean.fits
+
+# Back in pyraf:
+splot ("tel_clean.fits[SCI,1]")
 
 ###############################################################################
 # STEP 13: Reduce the science data                                            #
@@ -375,8 +388,6 @@ imdelete ("obj_comb.fits", verify=no)
 nscombine ("rdf@obj.lis", output="obj_comb.fits", fl_shiftint=no, \
 fl_cross=no, rejtype="none")
 #    fl_cross=yes, rejtype="minmax")   # KL, that doesn't work for faint targets
-
-
 
 display ("obj_comb.fits[SCI,1]", 1)
 
@@ -421,14 +432,20 @@ splot ("xtfobj_comb.fits[SCI,1]")
 
 # Note that this telluric has not been corrected to remove intrinsic stellar
 # features; this will leave false emission features in the final spectrum.
+# It has now - see step 12
 
 imdelete ("axtfobj_comb.fits", verify=no)
-nstelluric ("xtfobj_comb.fits", "xtftel_comb", fitorder=12, threshold=0.01, \
+nstelluric ("xtfobj_comb.fits", "tel_clean", fitorder=12, threshold=0.01, \
     fl_inter=yes)
+# order 28 for telluric, 12 for science
+# (scale, shift): [1] (1, -1.5), [2] (default(0.394), default (-2.35))
+# [3] (1, -2), [4] (0.4, default(-2.41)), [5] (0.2, default(-2.41))
+3 [6] (0.8, default(-2.41))
 
-splot ("axtfobj_comb.fits[SCI,1]", ymin=-200, ymax=1000)
+splot ("axtfobj_comb2.fits[SCI,1]", ymin=-200, ymax=1000)
+#
 specplot ("xtfobj_comb.fits[sci,1],axtfobj_comb.fits[sci,1],\
-    xtftel_comb.fits[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=4000)
+    tel_clean.fits[sci,1]", fraction=0.05, yscale=yes, ymin=-100, ymax=4000)
 
 ###############################################################################
 # STEP 18: Tidy up                                                            #

@@ -159,6 +159,8 @@ for line in file:
 
 file.close()
 
+# telluric looks slightly odd on the RHS
+
 
 ###############################################################################
 # STEP 5: f2prepare all the data                                              #
@@ -226,7 +228,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=111)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -260,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:

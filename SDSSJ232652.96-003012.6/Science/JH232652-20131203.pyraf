@@ -1,4 +1,4 @@
-###############################################################################
+ ###############################################################################
 # Once this script has been properly edited, it can be run by copying and     #
 # pasting each command into a PyRAF session.                                  #
 #                                                                             #
@@ -262,6 +262,7 @@ count = 0
 file = open("arc.lis", "r")
 for line in file:
 	count += 1
+
 if count == 1:
 	iraf.copy ("@rdfarc.lis", "arc.fits")
 else:
@@ -289,9 +290,18 @@ imdelete ("df@tel.lis", verify=no)
 nsreduce ("f@tel.lis", outprefix="d", fl_cut=no, fl_process_cut=no, \
     fl_dark=yes, darkimage="teldark.fits", fl_sky=no, fl_flat=no)
 
+#imdelete ("rdf@tel.lis", verify=no)
+#nsreduce ("df@tel.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
+#    flatimage="flat.fits")
+# Time diff between first obs and second is 45sec, while it is 22, 23.5 for the
+# the others. Automatic sky selection fails.
 imdelete ("rdf@tel.lis", verify=no)
+!echo dfS20131203S0038 >> telsky.lis
+!echo dfS20131203S0039 >> telsky.lis
+!echo dfS20131203S0040 >> telsky.lis
+!echo dfS20131203S0041 >> telsky.lis
 nsreduce ("df@tel.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
-    flatimage="flat.fits")
+          flatimage="flat.fits", skyimages="@telsky.lis")
 
 ###############################################################################
 # STEP 10: Combine the telluric data                                          #

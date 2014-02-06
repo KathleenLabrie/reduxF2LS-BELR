@@ -333,6 +333,25 @@ nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
 
 splot ("xtftel_comb.fits[SCI,1]")
 
+# Before running the steps below, examine xtftel_comb for stellar features
+# (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
+# Probable stellar features at ~(Å): 15558[1], 15705[2], 15878[3], 16103, 16406
+# 16804, 17367, 21658, 
+
+# Remove stellar absorption features in telluric through rmfeature in a second
+# terminal.
+# [IN A SECOND TERMINAL:]
+
+rmfeature xtftel_comb.fits tel_temp1.fits
+
+# Continue replacing tel_tempN until all features removed, naming the final
+# file tel_clean.fits (where N is number of iterative correction).
+
+rmfeature tel_temp*N.fits tel_temp**N.fits
+# An error is a reminder to replace the Ns in file names above!
+
+rmfeature tel_tempNN.fits tel_clean.fits
+
 ###############################################################################
 # STEP 13: Reduce the science data                                            #
 ###############################################################################

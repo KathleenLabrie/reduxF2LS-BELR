@@ -333,6 +333,36 @@ nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
 
 splot ("xtftel_comb.fits[SCI,1]")
 
+# Before running the steps below, examine xtftel_comb for stellar features
+# (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
+# Probable stellar features at ~(Å): 
+
+# Pa Gamma em: 17674.9086 - poss. in a telluric absorption line?
+# HeI(10830) em: 17500.22949 - seems OK - maybe in tell. abs. line?
+# Pa Delta em: 16238.85561 - seems OK
+# Pa Epsilon em: 15425.37772 *** UP TO HERE ***
+# H Alpha em: 10604.84821
+# HeI(5876) em: 9495.046028
+
+# Centres of most apparent stellar absorption lines are a little off from
+# expected hydrogen lines (in reference text).
+
+# Remove stellar absorption features in telluric through rmfeature in a second
+# terminal
+# [IN A SECOND TERMINAL:]
+
+rmfeature xtftel_comb.fits tel_temp.fits
+
+rmfeature tel_temp*N.fits tel_temp**N.fits
+
+# Continue replacing tel_tempN until all features removed, naming the final
+# file tel_clean.fits (where N is number of iterative correction).
+
+rmfeature tel_temp*N.fits tel_clean.fits
+
+# Back in pyraf:
+splot ("tel_clean.fits[SCI,1]")
+
 ###############################################################################
 # STEP 13: Reduce the science data                                            #
 ###############################################################################
