@@ -1,12 +1,29 @@
 ###############################################################################
 # Once this script has been properly edited, it can be run by copying and     #
-# pasting each command into an IRAF or PyRAF session, or by defining this     #
-# script as a task by typing:                                                 #
-#                                                                             #
-#   ecl> task $thisscript="thisscript.cl"                                     #
-#   ecl> thisscript                                                           #
+# pasting each command into a PyRAF session.                                  #
 #                                                                             #
 ###############################################################################
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#  Things to edit for each new observation
+#
+# - RENAME THE FILE, and put in target_name/science directory.
+#
+# - Observation UT date in top comment
+# - Data filename prefix in top comment
+# - File numbers in top comment
+# - Filter, grism, slit width, and exposure times in top comment
+# - Name of telluric in top comment
+#
+# - The "JH023318" string throughout the script to match your source name.
+# - The data filename prefix in the gemlist section
+# - The file numbers in the gemlist section.
+# Note the "gemlist" section is where the input file lists are created.
+#
+# - If the science darks are being used for the arcs as well, select
+#   the appropriate concat statement locate just below the gemlist section.
+#	Instructions included there.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # The data files have been separated by filter and exposure time, where
 # appropriate. This information can be found in the primary header unit (PHU)
@@ -17,27 +34,28 @@
 #
 # Science Dataset:
 #
-# Observation UT date : 2013 Oct 29, *2013 Nov 01
-# Data filename prefix: S20131029S, *S20131101S
+# Observation UT date : 2013 Dec 25, *2013 Dec 14
+# Data filename prefix: S20131225S, *S20131214S
 # File numbers:
-#      Science                    : 039-042 (JH, JH, 2pix-slit, 90s)
-#      Darks for science          : 178-174 (90s)
-#      Flat                       : 044     (JH, JH, 2pix-slit, 8s)
-#      Darks for flat             : *046-052 (8s)
-#      Arc                        : 043     (JH, JH, 2pix-slit, 30s)
-#      Darks for arc              : *074-080 (30s)
+#      Science                    : 065-068 (JH, JH, 2pix-slit, 300s)
+#      Darks for science          : 186-191 (300s)
+#      Flat                       : 070     (JH, JH, 2pix-slit, 8s)
+#      Darks for flat             : 011-020 (8s)
+#      Arc                        : 069     (JH, JH, 2pix-slit, 30s)
+#      Darks for arc              : *183-189 (30s)
 #
 # Telluric Dataset:
 #
-# Observation UT date : 2013 Oct 29, *2013 Nov 01, ** 2013 Oct 31
-# Data filename prefix: S20131029S, *S20131101S, **S20131031S
+# Observation UT date : 2013 Dec 25, *2013 Dec 14
+# Data filename prefix: S20131225S, *S20131214S
 # File numbers:
-#      Telluric (HIP 2586)        : 060-063 (JH, JH, 2pix-slit, 5s)
-#      Darks for telluric         : **044-049 (5s)
-#      Flat                       : 044     (JH, JH, 2pix-slit, 8s)
-#      Darks for flat             : *046-052 (8s)
-#      Arc                        : 043     (JH, JH, 2pix-slit, 30s)
-#      Darks for arc              : *074-080 (30s)
+#      Telluric (HIP 13917)       : 075-082 (JH, JH, 2pix-slit, 15s)
+#      ***NOTE: USER MUST VISUALLY INSPECT TELLURIC SEQUENCE FOR SIM. FLUX***
+#      Darks for telluric         : 198-204 (15s)
+#      Flat                       : 070     (JH, JH, 2pix-slit, 8s)
+#      Darks for flat             : 011-020 (8s)
+#      Arc                        : 069     (JH, JH, 2pix-slit, 30s)
+#      Darks for arc              : *183-189 (30s)
 
 ###############################################################################
 # STEP 1: Initialize the required packages                                    #
@@ -47,13 +65,12 @@
 gemini
 f2
 
-# If copying and pasting these commands into an interactive PyRAF session, use
-# the following lines to import the required packages
-#from pyraf.iraf import gemini
-#from pyraf.iraf import f2
+# Import the required packages
+from pyraf.iraf import gemini
+from pyraf.iraf import f2
 
 # Use the default parameters except where specified on command lines below
-print ("\nJH003251: Unlearning tasks")
+print ("\nJH023318: Unlearning tasks")
 unlearn ("gemini")
 unlearn ("f2")
 unlearn ("gnirs")
@@ -63,42 +80,28 @@ unlearn ("gemtools")
 # STEP 2: Define any variables, the database and the logfile                  #
 ###############################################################################
 
-# Define any variables (not required if copying and pasting into an interactive
-# PyRAF session)
-string rawdir, image
-int num
-struct *scanfile
 
 # Define the logfile
-f2.logfile = "JH003251.log"
+f2.logfile = "JH023318.log"
 
 # To start from scratch, delete the existing logfile
-printf ("JH003251: Deleting %s\n", f2.logfile)
+printf ("JH023318: Deleting %s\n", f2.logfile)
 delete (f2.logfile, verify=no)
 
 # Define the database directory
-f2.database = "JH003251_database/"
+f2.database = "JH023318_database/"
 
 # To start from scratch, delete the existing database files
 
-# If copying and pasting these commands into an interactive PyRAF session, use
-# something similar to the following example instead of using the uncommented
-# lines below.
-#
-#     >>> if (iraf.access(f2.database)):
-#     ...    print "JH003251: Deleting contents of %s" % (f2.database)
-#     ...    iraf.delete (f2.database + "*", verify=no)
+if (iraf.access(f2.database)):
+	print "JH023318: Deleting contents of %s" % (f2.database)
+	iraf.delete (f2.database + "*", verify=no)
 
-if (access(f2.database)) {
-    printf ("JH003251: Deleting contents of %s\n", f2.database)
-    delete (f2.database//"*", verify=no)
-}
-;
 
 # Define the directory where the raw data is located
 # Don't forget the trailing slash!
-rawdir = "../../raw/"
-printf ("JH003251: Raw data is located in %s\n", rawdir)
+rawdir = "../../../raw/"
+printf ("JH023318: Raw data is located in %s\n", rawdir)
 
 # Load the header keywords for F2
 nsheaders ("f2", logfile=f2.logfile)
@@ -115,20 +118,30 @@ tel.lis,teldark.lis,all.lis", verify=no)
 
 # The user should edit the parameter values in the gemlist calls below to match
 # their own dataset.
-print ("JH003251: Creating the reduction lists")
-gemlist "S20131029S" "044"      > "flat.lis"
-gemlist "S20131101S" "046-052" > "flatdark.lis"
-gemlist "S20131029S" "043"     > "arc.lis"
-gemlist "S20131101S" "074-080" > "arcdark.lis"
-gemlist "S20131029S" "039-042" > "obj.lis"
-gemlist "S20131029S" "178-184" > "objdark.lis"
-gemlist "S20131029S" "060-063"   > "tel.lis"
-gemlist "S20131031S" "044-049"     > "teldark.lis"
+print ("JH023318: Creating the reduction lists")
+gemlist "S20131225S" "070"      > "flat.lis"
+gemlist "S20131225S" "011-020" > "flatdark.lis"
+gemlist "S20131225S" "069"     > "arc.lis"
+gemlist "S20131214S" "183-189" > "arcdark.lis"
+gemlist "S20131225S" "065-068" > "obj.lis"
+gemlist "S20131225S" "186-191" > "objdark.lis"
+gemlist "S20131225S" "075-082"   > "tel.lis"
+gemlist "S20131225S" "198-204"     > "teldark.lis"
 
+# Use the first if the arcdarks and objdarks are all different
+# If they are the same use the second version of concat
+# (There's a problem in f2prepare that makes it barf if there
+#  are duplicates.)
+
+#  CAREFUL HERE
+# If no duplicate darks, use this:
 concat ("flat.lis,flatdark.lis,arc.lis,arcdark.lis,obj.lis,objdark.lis,\
 tel.lis,teldark.lis", "all.lis")
+
+# If there are duplicate, use this instead.
 #concat ("flat.lis,flatdark.lis,arc.lis,obj.lis,objdark.lis,\
 #tel.lis,teldark.lis", "all.lis")
+
 
 ###############################################################################
 # STEP 4: Visually inspect the data                                           #
@@ -141,24 +154,14 @@ tel.lis,teldark.lis", "all.lis")
 
 # Please make sure a display tool (e.g., ds9, ximtool) is already open.
 
-# If copying and pasting these commands into an interactive PyRAF session, use
-# something similar to the following example instead of using the uncommented
-# lines below.
-#
-#     >>> file = open("all.lis", "r")
-#     >>> for line in file:
-#     ...    image = line.strip() + "[1]"
-#     ...    iraf.display(rawdir + image, 1)
-#     ...    iraf.sleep(5)
-#     ...
-#     >>> file.close()
+file = open("all.lis", "r")
+for line in file:
+	image = line.strip() + "[1]"
+	iraf.display(rawdir + image, 1)
+	iraf.sleep(5)
 
-scanfile = "all.lis"
-while (fscan(scanfile, image) != EOF) {
-    display (rawdir//image//"[1]", 1)
-    sleep 5
-}
-scanfile = ""
+file.close()
+# obj data seems very bright and overlapping
 
 ###############################################################################
 # STEP 5: f2prepare all the data                                              #
@@ -208,24 +211,14 @@ gemcombine ("@fteldark.lis", "teldark.fits", combine="average", fl_vardq=yes, \
 
 imdelete ("df@flat.lis", verify=no)
 
-# If copying and pasting these commands into an interactive PyRAF session, use
-# something similar to the following example instead of using the uncommented
-# lines below.
-#
-#     >>> file = open("flat.lis", "r")
-#     >>> for line in file:
-#     ...    image = line.strip()
-#     ...    iraf.gemarith ("f" + image, "-", "flatdark.fits", "df" + image, \
-#                fl_vardq=yes, logfile=f2.logfile)
-#     ...
-#     >>> file.close()
+file = open("flat.lis", "r")
+for line in file:
+	image = line.strip()
+	iraf.gemarith ("f" + image, "-", "flatdark.fits", "df" + image, \
+		fl_vardq=yes, logfile=f2.logfile)
 
-scanfile = "flat.lis"
-while (fscan(scanfile, image) != EOF) {
-    gemarith ("f"//image, "-", "flatdark.fits", "df"//image, fl_vardq=yes, \
-        logfile=f2.logfile)
-}
-scanfile = ""
+file.close()
+
 
 imdelete ("cdf@flat.lis", verify=no)
 f2cut ("df@flat.lis")
@@ -236,7 +229,7 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=113)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -266,28 +259,18 @@ imdelete ("arc.fits", verify=no)
 delete ("rdfarc.lis", verify=no)
 sections "rdf@arc.lis//.fits" > "rdfarc.lis"
 
-# If copying and pasting these commands into an interactive PyRAF session, use
-# something similar to the following example instead of using the uncommented
-# lines below.
-#
-#     >>> count = 0
-#     >>> file = open("arc.lis", "r")
-#     >>> for line in file:
-#     ...     count += 1
-#     ...
-#     >>> if count == 1:
-#     ...    iraf.copy ("@rdfarc.lis", "arc.fits")
-#     ... else:
-#     ...    iraf.gemcombine ("@rdfarc.lis", "arc.fits", fl_vardq=yes)
-#     ...
-#     >>> file.close()
+count = 0
+file = open("arc.lis", "r")
+for line in file:
+	count += 1
 
-count ("arc.lis") | scan (num)
-if (num == 1) {
-    copy ("@rdfarc.lis", "arc.fits")
-} else {
-    gemcombine ("@rdfarc.lis", "arc.fits", fl_vardq=yes)
-}
+if count == 1:
+	iraf.copy ("@rdfarc.lis", "arc.fits")
+else:
+	iraf.gemcombine ("@rdfarc.lis", "arc.fits", fl_vardq=yes)
+
+file.close()
+
 
 # Now determine the wavelength solution. It is recommended to run nswavelength
 # interactively. The default settings work well for most filter / grism
@@ -371,8 +354,9 @@ nsreduce ("df@obj.lis", fl_cut=yes, fl_dark=no, fl_sky=yes, fl_flat=yes, \
 
 imdelete ("obj_comb.fits", verify=no)
 nscombine ("rdf@obj.lis", output="obj_comb.fits", fl_shiftint=no, \
-#    fl_cross=yes, rejtype="minmax")
 fl_cross=no, rejtype="none")
+#    fl_cross=yes, rejtype="minmax")   # KL, that doesn't work for faint targets
+
 
 
 display ("obj_comb.fits[SCI,1]", 1)
@@ -407,8 +391,10 @@ nstransform ("fobj_comb.fits")
 imdelete ("xtfobj_comb.fits", verify=no)
 nsextract ("tfobj_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)
-
+#970
 splot ("xtfobj_comb.fits[SCI,1]")
+# not sure where the rest of the data points have gone after line 750 in the
+# fit (2nd) section.
 
 ###############################################################################
 # STEP 17: Apply the telluric correction to the science spectrum              #
@@ -429,9 +415,11 @@ specplot ("xtfobj_comb.fits[sci,1],axtfobj_comb.fits[sci,1],\
 # STEP 18: Tidy up                                                            #
 ###############################################################################
 
-delete ("flat.lis,flatdark.lis,fflatdark.lis,arc.lis,arcdark.lis,farcdark.lis,\
-rdfarc.lis,obj.lis,objdark.lis,fobjdark.lis,tel.lis,teldark.lis,fteldark.lis,\
-all.lis", verify=no)
+#  KL:  I usually keep the files to keep track of what's what when I need to
+#		investigate further.
+#delete ("flat.lis,flatdark.lis,fflatdark.lis,arc.lis,arcdark.lis,farcdark.lis,\
+#rdfarc.lis,obj.lis,objdark.lis,fobjdark.lis,tel.lis,teldark.lis,fteldark.lis,\
+#all.lis", verify=no)
 
 ###############################################################################
 # Finished!                                                                   #
