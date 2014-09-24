@@ -162,6 +162,8 @@ for line in file:
 file.close()
 
 # bit of an odd feature on arcdark 805
+# KL:  probably a cosmic ray coming in at a very shallow angle.
+# KL:  it won't affect the master dark.
 
 
 ###############################################################################
@@ -230,7 +232,10 @@ f2cut ("df@flat.lis")
 
 imdelete ("flat.fits,f2_ls_bpm.pl", verify=no)
 nsflat ("cdf@flat.lis", flatfile="flat.fits", bpmfile="f2_ls_bpm.pl", \
-    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=18)
+    thr_flo=0.35, thr_fup=3.0, fl_inter=yes, order=101)
+# KL: changed order to 101
+
+display('flat.fits[sci,1]', 1)
 
 ###############################################################################
 # STEP 8: Reduce the arc and determine the wavelength solution                #
@@ -320,7 +325,7 @@ display ("tel_comb.fits[SCI,1]", 1)
 # F2 longslit data. If it is desired, first call nssdist.
 
 imdelete ("ftel_comb.fits", verify=no)
-nsfitcoords ("tel_comb.fits", lamptransf="warc.fits")
+nsfitcoords ("tel_comb.fits", lamptransf="warc.fits", lxorder=3, lyorder=6)
 
 imdelete ("tftel_comb.fits", verify=no)
 nstransform ("ftel_comb.fits")
@@ -330,10 +335,52 @@ nstransform ("ftel_comb.fits")
 ###############################################################################
 
 imdelete ("xtftel_comb.fits", verify=no)
-nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
+nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)
 
 splot ("xtftel_comb.fits[SCI,1]")
+
+# Before running the steps below, examine xtftel_comb for stellar features
+# (refer to H-series). Keep the above plot open (i.e. don’t ‘q’).
+
+# KL: 17362[1], 16807[2], 16407[3], 16109[4], 15881[5],
+#	15701[6], 15557[7], 15439[8], 15342[9], 15261[10],
+#	12818[11], 10928[12], 10049[clean]
+#	
+# KL: **** the lines don't fall on the correct wavelengths ****
+# KL: **** Is the wavecal correct? 
+# KL: **** The lines are okay at the red end of the H-band. ****
+# KL: **** At the blue end of the H-band, there's a 20 A offset ****
+# KL: **** I re-ran the wavecal, and it looks good.  I've reapplied
+# KL: **** the correction.  Still a 20 A offset.
+# KL: [1] fit 
+# KL: [2] fit 
+# KL: [3] fit 
+# KL: [4] fit 
+# KL: [5] fit 
+# KL: [6] fit 
+# KL: [7] fit 
+# KL: [8] fit 
+# KL: [9] fit 
+# KL: [10] fit 
+# KL: [11] fit 
+# KL: [12] fit 
+# KL: [clean] fit 
+
+# Remove stellar absorption features in telluric through rmfeature in a second
+# terminal.
+# [IN A SECOND TERMINAL:]
+
+rmfeature xtftel_comb.fits tel_temp1.fits
+
+# Continue replacing tel_tempN until all features removed, naming the final
+# file tel_clean.fits (where N is number of iterative correction).
+
+rmfeature tel_temp*N.fits tel_temp**N.fits
+# An error is a reminder to replace the Ns in file names above!
+
+rmfeature tel_temp12.fits tel_clean.fits
+
 
 ###############################################################################
 # STEP 13: Reduce the science data                                            #

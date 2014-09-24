@@ -279,6 +279,33 @@ file.close()
 imdelete ("warc.fits", verify=no)
 nswavelength ("arc.fits", fl_inter=yes)
 
+#----------------------
+# Test recovery of a calibrated arc
+imdelete ("farc.fits", verify=no)
+nsfitcoords ("arc.fits", lamptransf="warc.fits", fl_inter=yes)
+# Note down the xorder and yorder needed for a good fit.  Use
+# that wheneven warc.fits is used by nsfitcoords.
+# xorder=3, yorder=6
+
+imdelete ("tfarc.fits", verify=no)
+nstransform ("farc.fits")
+display ("tfarc.fits[sci,1]", 1)
+
+splot ("tfarc.fits[sci,1]", line=928)
+# 928 is where the telluric spectrum falls
+# set :nsum 30
+# Check that the arc lines are at the correct wavelength.
+# Use 'k' on each side of a line to get the centroid.  Then
+# compare with line lists and diagrams. 
+#	http://www.gemini.edu/sciops/instruments/niri/?q=node/10166
+#   The NIRI plots work well but they are a mirror image of your
+#   transformed arc.  still all the info you need is there.
+#
+# KL: The arc gets transformed correctly.  The lines are within
+#     1-2 Angstroms.  Note that the shape of the lines is not
+#	  symetric.  No idea why, but it surely affects centering.
+#-----------------------
+
 ###############################################################################
 # STEP 9: Reduce the telluric data                                            #
 ###############################################################################
@@ -318,17 +345,99 @@ display ("tel_comb.fits[SCI,1]", 1)
 # F2 longslit data. If it is desired, first call nssdist.
 
 imdelete ("ftel_comb.fits", verify=no)
-nsfitcoords ("tel_comb.fits", lamptransf="warc.fits")
+nsfitcoords ("tel_comb.fits", lamptransf="warc.fits", lxorder=3, lyorder=6)
 
 imdelete ("tftel_comb.fits", verify=no)
 nstransform ("ftel_comb.fits")
+display ("tftel_comb[sci,1]", 1)
+
+#--------------------
+# Check that the hydrogen lines fall where they are supposed to be.
+splot ("tftel_comb[sci,1]", line=928)
+# 928 is where the telluric falls
+# :nsum 30
+# Use 'k' on each side of a line to centroid.
+# Compare with atomic line position.
+#
+# KL:  *** The lines do NOT match the atomic list! ***
+#---------------------
+
+#---------------------
+# Troubleshooting.  -> Check the position of the sky lines.
+#
+# dark and flat, without sky correction of one telluric dataset.
+imdelete ("XdfS20131026S0699", verify=no)
+nsreduce ("dfS20131026S0699", outprefix='X', fl_cut=yes, fl_dark=no, fl_sky=no, 
+	fl_flat=yes, flatimage="flat.fits")
+display ("XdfS20131026S0699[sci,1]", 1)
+#
+# apply wavecal solution
+imdelete ("fXdfS20131026S0699", verify=no)
+nsfitcoords ("XdfS20131026S0699", lamptransf="warc.fits", lxorder=3, lyorder=6)
+
+imdelete ("tfXdfS20131026S0699", verify=no)
+nstransform ("fXdfS20131026S0699")
+display ("tfXdfS20131026S0699[sci,1]", 1)
+
+splot ("tfXdfS20131026S0699[sci,1]", line=750)
+# :nsum 30
+# Use 'k' again and sky line plots and lists to check position
+#  of the sky lines.
+# Resources: http://www.jach.hawaii.edu/UKIRT/astronomy/calib/spec_cal/oh.html
+#			 http://www.jach.hawaii.edu/UKIRT/astronomy/calib/spec_cal/ohlines.html
+#
+# KL: checked in the H-band and the K-band.  There is a *constant* wavelength
+#     shift of +11 Angstrom +/- 0.5 compared to the OH line list.
+#	  => the slit has moved.
+#	  Now check the hydrogen lines again, this time carefully.  Can we see the
+#	  same 11 Angstrom shift?
+#
+#	  Hydrogen lines.  Some do show 11 A, others 19, 15, 10, 9.  Those
+#	  are absorption lines though and are rather broad.
+#
+#	  Since the OH emission lines clearly indicate a 11 A offset, we go 
+#	  with that.
+#
+# SOLUTIONS:
+#   Option 1) Go to the fitcoords solution and subtract 11 A from the
+#			  translation coefficient.  (Seems to work fine, the hydrogen
+#			  lines show up at the correct wavelength +/- 1-2 Angs.)
+#	Option 2) Forget the arc, derive a new solution from the sky lines.
+#			  Might be more kosher, but that means more fiddling and the
+#			  DR procedure needs to be changed and documented.
+#--------------------
+
+#--------------------
+# Trying out Option 2
+imdelete ("wXdfS20131026S0699.fits", verify=no)
+nswavelength ("XdfS20131026S0699.fits", 
+			  coordlist="gemini$gcal/linelists/ohlines.dat", 
+			  fl_inter=yes)
+imdelete ("Xtel_comb.fits", verify=no)
+nsfitcoords ("tel_comb.fits", lamptransf="wXdfS20131026S0699.fits", 
+		outprefix="X", fl_inter=yes, lxorder=3, lyorder=6)
+
+imdelete ("tXtel_comb.fits", verify=no)
+nstransform ("Xtel_comb.fits")
+imdelete ("xtXtel_comb.fits", verify=no)
+nsextract ("tXtel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
+    fl_trace=yes)
+
+splot ("xtXtel_comb.fits[SCI,1]")
+
+# KL:  That works really well, and without much fuss.
+# KL:  I'm almost tempted to use sky lines for the science too.
+# KL:  The left and right edges don't get much coverage though.
+# KL:  But do we have anything of value there?  I don't think so.
+
+
 
 ###############################################################################
 # STEP 12: Extract the telluric spectrum                                      #
 ###############################################################################
 
 imdelete ("xtftel_comb.fits", verify=no)
-nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=no, \
+nsextract ("tftel_comb.fits", fl_apall=yes, fl_findneg=no, fl_inter=yes, \
     fl_trace=yes)
 
 splot ("xtftel_comb.fits[SCI,1]")
@@ -389,7 +498,6 @@ fl_cross=no, rejtype="none")
 #    fl_cross=yes, rejtype="minmax")   # KL, that doesn't work for faint targets
 
 
-
 display ("obj_comb.fits[SCI,1]", 1)
 
 ###############################################################################
@@ -411,6 +519,38 @@ nsfitcoords ("obj_comb.fits", lamptransf="warc.fits")
 
 imdelete ("tfobj_comb.fits", verify=no)
 nstransform ("fobj_comb.fits")
+
+#---------------------
+# Troubleshooting.  -> Check the position of the sky lines.
+#
+# dark and flat, without sky correction of one telluric dataset.
+imdelete ("XdfS20131026S0681", verify=no)
+nsreduce ("dfS20131026S0681", outprefix='X', fl_cut=yes, fl_dark=no, fl_sky=no, 
+	fl_flat=yes, flatimage="flat.fits")
+display ("XdfS20131026S0681[sci,1]", 1)
+#
+# apply wavecal solution
+imdelete ("fXdfS20131026S0681", verify=no)
+nsfitcoords ("XdfS20131026S0681", lamptransf="warc.fits", lxorder=3, lyorder=6)
+
+imdelete ("tfXdfS20131026S0681", verify=no)
+nstransform ("fXdfS20131026S0681")
+display ("tfXdfS20131026S0681[sci,1]", 1)
+
+splot ("tfXdfS20131026S0681[sci,1]", line=750)
+# :nsum 30
+# Use 'k' again and sky line plots and lists to check position
+#  of the sky lines.
+# Resources: http://www.jach.hawaii.edu/UKIRT/astronomy/calib/spec_cal/oh.html
+#			 http://www.jach.hawaii.edu/UKIRT/astronomy/calib/spec_cal/ohlines.html
+#
+# KL: checked in the H-band and the K-band.  The OH lines show up
+#	  where they are supposed to show within 1-2 Angstrom, like the arc.
+#	  This was expected given that the arc was taken right after the
+#	  science observations.
+#--------------------
+
+
 
 ###############################################################################
 # STEP 16: Extract the science spectrum                                       #
