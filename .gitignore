@@ -58,5 +58,5 @@ target/
 .pydevproject
 
 # IPython notebooks
-**/.ipynb_checkpoints
+.ipynb_checkpoints
 
